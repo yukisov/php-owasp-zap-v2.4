@@ -19,7 +19,7 @@ class Zapv2Test extends \PHPUnit_Framework_TestCase{
 	public function testVersion() {
 		$zap = new \Zap\Zapv2($this->proxy);
 		$version = @$zap->core->version();
-		$this->assertSame("2.3.1", $version);
+		$this->assertSame("2.4", $version);
 	}
 
 	/**
