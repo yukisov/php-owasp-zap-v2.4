@@ -107,36 +107,44 @@ class Zapv2 {
 		$this->{$name} = $obj;
 	}
 
-	/**
-	 * Checks that we have an OK response, else raises an exception.
-	 *
-	 * checks the result json data after doing action request
-	 *
-	 * @param array $json_data the json data to look at.
-	 */
+    /**
+     * Checks that we have an OK response, else raises an exception.
+     *
+     * checks the result json data after doing action request
+     *
+     * @param object $json_data the json data to look at.
+     * @return object
+     * @throws ZapError
+     */
 	public function expectOk($json_data) {
-		if (is_object($json_data) && property_exists($json_data, 'Result') && $json_data->{'Result'} == 'OK') {
-			return $json_data;
+		if (is_object($json_data) && property_exists($json_data, 'code') && $json_data->{'code'} != '') {
+            if (property_exists($json_data, 'message')) {
+                $msg = $json_data->message;
+            } else {
+                $msg = "";
+            }
+            throw new ZapError(sprintf('%s(%s)', $msg, $json_data->code));
 		}
-		//throw new ZapError($json_data->values());
-		throw new ZapError(var_export($json_data, true));
+        return $json_data;
 	}
 
-	/**
-	 * Opens a url
-	 *
-	 * @param $url
-	 */
+    /**
+     * Opens a url
+     *
+     * @param $url
+     * @return string
+     */
 	public function sendRequest($url) {
 		$context = stream_context_create(array('http' => array('proxy' => $this->proxy)));
 		return file_get_contents($url, false, $context);
 	}
 
-	/**
-	 * Open a url
-	 *
-	 * @param string $url
-	 */
+    /**
+     * Open a url
+     *
+     * @param string $url
+     * @return string
+     */
 	public function statusCode($url) {
 		// get the current proxy value
 		$sc_before = stream_context_get_default();
@@ -155,24 +163,26 @@ class Zapv2 {
 		return substr($headers[0], 9, 3);
 	}
 
-	/**
-	 * Shortcut for a GET request.
-	 *
-	 * @param string $url the url to GET at.
-	 * @param array $get the disctionary to turn into GET variables.
-	 */
+    /**
+     * Shortcut for a GET request.
+     *
+     * @param string $url the url to GET at.
+     * @param array $get the disctionary to turn into GET variables.
+     * @return mixed
+     */
 	public function request($url, $get=array()) {
 		$response = $this->sendRequest($url . '?' . $this->urlencode($get));
 		$response = trim($response, '()');
 		return json_decode($response);
 	}
 
-	/**
-	 * Shortcut for an API OTHER GET request.
-	 *
-	 * @param string $url the url to GET at.
-	 * @param array $getParams the disctionary to turn into GET variables.
-	 */
+    /**
+     * Shortcut for an API OTHER GET request.
+     *
+     * @param string $url the url to GET at.
+     * @param array $getParams the disctionary to turn into GET variables.
+     * @return string
+     */
 	public function requestOther($url, $getParams=array()) {
 		return $this->sendRequest($url . '?' . $this->urlencode($getParams));
 	}
