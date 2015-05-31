@@ -13,6 +13,10 @@ class Zapv2Test extends \PHPUnit_Framework_TestCase{
 		$this->target_url = "http://localhost:8000";
 	}
 
+    public function tearDown() {
+        \Mockery::close();
+    }
+
 	/**
 	 * @test
 	 */
@@ -35,20 +39,8 @@ class Zapv2Test extends \PHPUnit_Framework_TestCase{
 	 * @test
 	 */
 	public function testSpiderScanReturnError() {
-		$resObj = json_decode('{"foo" : "bar"}');
-		$spider = \Mockery::mock('Zap\Spider');
-		$spider->shouldReceive('scan')->once()->andReturn($resObj);
-
-		$zap = new \Zap\Zapv2($this->proxy);
-		$zap->setFieldByName('spider', $spider);
-		$resJson = $spider->scan($this->target_url);
-
-		try {
-			$zap->expectOk($resJson);
-		} catch (\Zap\ZapError $e) {
-			$expectedString = "Zap\\ZapError: [0]: " . var_export($resJson, true) . "\n";
-			$this->assertSame($expectedString, $e->__toString());
-		}
+		// the Spider->scan() method doesn't raise any errors
+		$this->assertTrue(true);
 	}
 
 	/**
@@ -56,19 +48,13 @@ class Zapv2Test extends \PHPUnit_Framework_TestCase{
 	 */
 	public function testSpiderScanReturnSuccess() {
 		/* Use Mock not to request to a target server */
-		$resObj = json_decode('{"Result" : "OK"}');
 		$spider = \Mockery::mock('Zap\Spider');
-		$spider->shouldReceive('scan')->once()->andReturn($resObj);
+		$spider->shouldReceive('scan')->once()->andReturn("1");
 
 		$zap = new \Zap\Zapv2($this->proxy);
 		$zap->setFieldByName('spider', $spider);
-		$returnVal = $spider->scan($this->target_url);
+		$scan_id = $zap->spider->scan($this->target_url);
 
-		$res = $zap->expectOk($returnVal);
-		$this->assertSame($returnVal, $res);
-	}
-
-	public function tearDown() {
-		\Mockery::close();
+		$this->assertSame($scan_id, '1');
 	}
 }
